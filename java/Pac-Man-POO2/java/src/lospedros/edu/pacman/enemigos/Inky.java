@@ -1,6 +1,6 @@
 package lospedros.edu.pacman.enemigos;
 
-import java.awt.*;
+import java.awt.Color;
 
 public class Inky extends Atacante {
     public Inky(int x, int y, int velocidad) {
@@ -11,11 +11,17 @@ public class Inky extends Atacante {
     public void calcularSiguienteMovimiento(int pacmanX, int pacmanY) {
         // Movimiento alternado
         if (Math.random() > 0.5) {
-            if (this.x < pacmanX) this.x += velocidad;
-            else this.x -= velocidad;
+            if (getX() < pacmanX) {
+                setX(getX() + getVelocidad());
+            } else {
+                setX(getX() - getVelocidad());
+            }
         } else {
-            if (this.y < pacmanY) this.y += velocidad;
-            else this.y -= velocidad;
+            if (getY() < pacmanY) {
+                setY(getY() + getVelocidad());
+            } else {
+                setY(getY() - getVelocidad());
+            }
         }
     }
 }

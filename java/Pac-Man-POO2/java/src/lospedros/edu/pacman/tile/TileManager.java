@@ -7,9 +7,9 @@ import java.awt.Graphics2D;
 
 public class TileManager {
 
-    GamePanel gp;
-    public Tile[] tile;
-    public int[][] mapTileNum;
+    private final GamePanel gp;
+    private final Tile[] tile;
+    private final int[][] mapTileNum;
 
     public TileManager(GamePanel gp) {
         this.gp = gp;
@@ -20,13 +20,21 @@ public class TileManager {
         loadMap();
     }
 
+    public Tile getTile(int index) {
+        return tile[index];
+    }
+
+    public int[][] getMapTileNum() {
+        return mapTileNum;
+    }
+
     public void getTileImage() {
         // 0 = floor, 1 = wall
         tile[0] = new Tile();
-        tile[0].collision = false;
+        tile[0].setCollision(false);
 
         tile[1] = new Tile();
-        tile[1].collision = true;
+        tile[1].setCollision(true);
     }
 
     public void loadMap() {
@@ -56,9 +64,9 @@ public class TileManager {
             {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
             {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
         };
-        
-        for(int row = 0; row < gp.maxScreenRow; row++) {
-            for(int col = 0; col < gp.maxScreenCol; col++) {
+
+        for (int row = 0; row < gp.maxScreenRow; row++) {
+            for (int col = 0; col < gp.maxScreenCol; col++) {
                 if (row < defaultMap.length && col < defaultMap[0].length) {
                     mapTileNum[col][row] = defaultMap[row][col];
                 }

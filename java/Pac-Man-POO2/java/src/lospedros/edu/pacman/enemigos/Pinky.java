@@ -1,6 +1,6 @@
 package lospedros.edu.pacman.enemigos;
 
-import java.awt.*;
+import java.awt.Color;
 
 public class Pinky extends Atacante {
     public Pinky(int x, int y, int velocidad) {
@@ -11,10 +11,16 @@ public class Pinky extends Atacante {
     public void calcularSiguienteMovimiento(int pacmanX, int pacmanY) {
         // Intenta adelantarse 4 casillas (aprox 60px)
         int objetivoX = pacmanX + 60;
-        if (this.x < objetivoX) this.x += velocidad;
-        else if (this.x > objetivoX) this.x -= velocidad;
+        if (getX() < objetivoX) {
+            setX(getX() + getVelocidad());
+        } else if (getX() > objetivoX) {
+            setX(getX() - getVelocidad());
+        }
 
-        if (this.y < pacmanY) this.y += velocidad;
-        else if (this.y > pacmanY) this.y -= velocidad;
+        if (getY() < pacmanY) {
+            setY(getY() + getVelocidad());
+        } else if (getY() > pacmanY) {
+            setY(getY() - getVelocidad());
+        }
     }
 }
