@@ -5,7 +5,6 @@ import lospedros.edu.pacman.process.Pacman;
 import lospedros.edu.pacman.process.ScoreManager;
 import lospedros.edu.pacman.data.Item;
 import lospedros.edu.pacman.tile.TileManager;
-import lospedros.edu.pacman.utils.GameLocale;
 
 import javax.swing.JPanel;
 import java.awt.Dimension;
@@ -30,7 +29,7 @@ public class GamePanel extends JPanel implements Runnable {
     public TileManager tileM = new TileManager(this);
     public CollisionChecker cChecker = new CollisionChecker(this);
 
-    // --- TU PARTE: Lógica de Puntos y Bonos ---
+    // Lógica de Puntos y Bonos
     public ScoreManager scoreManager = new ScoreManager();
     public String bonusMessage = ""; // Mensaje flotante
     private int bonusTimer = 0;      // Duración del mensaje

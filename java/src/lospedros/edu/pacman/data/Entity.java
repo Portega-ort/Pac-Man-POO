@@ -1,12 +1,13 @@
 package lospedros.edu.pacman.data;
 
+import lospedros.edu.pacman.utils.Directions;
 import java.awt.Rectangle;
 
-public class Entity {
+public abstract class Entity {
     public int x, y;
     public int speed;
-    
-    public String direction;
+    public int direction = Directions.NONE;
     public Rectangle solidArea;
-    public boolean collisionOn = false;
+    
+    public abstract void update();
 }

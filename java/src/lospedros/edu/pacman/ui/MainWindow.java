@@ -3,10 +3,9 @@ package lospedros.edu.pacman.ui;
 import lospedros.edu.pacman.utils.GameLocale;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-public class MainWindow extends JFrame {
+public class
+MainWindow extends JFrame {
 
     private GamePanel gamePanel;
 
@@ -56,9 +55,6 @@ public class MainWindow extends JFrame {
         languageMenu.setText(GameLocale.getString("menu.language"));
         languageMenu.getItem(0).setText(GameLocale.getString("menu.language.en"));
         languageMenu.getItem(1).setText(GameLocale.getString("menu.language.es"));
-        
-        // Aquí podrías notificar al GamePanel si necesita actualizar textos internos
-        // gamePanel.updateTexts(); 
     }
 
     public static void main(String[] args) {

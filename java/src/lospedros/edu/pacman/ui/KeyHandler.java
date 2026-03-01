@@ -1,15 +1,15 @@
 package lospedros.edu.pacman.ui;
 
+import lospedros.edu.pacman.process.Controller;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class KeyHandler implements KeyListener {
+public class KeyHandler implements KeyListener, Controller {
 
     public boolean upPressed, downPressed, leftPressed, rightPressed;
 
     @Override
-    public void keyTyped(KeyEvent e) {
-    }
+    public void keyTyped(KeyEvent e) {}
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -46,4 +46,17 @@ public class KeyHandler implements KeyListener {
             rightPressed = false;
         }
     }
+
+    // Controller Interface Implementation
+    @Override
+    public boolean isUp() { return upPressed; }
+
+    @Override
+    public boolean isDown() { return downPressed; }
+
+    @Override
+    public boolean isLeft() { return leftPressed; }
+
+    @Override
+    public boolean isRight() { return rightPressed; }
 }

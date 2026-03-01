@@ -2,25 +2,30 @@ package lospedros.edu.pacman.process;
 
 import lospedros.edu.pacman.data.Entity;
 import lospedros.edu.pacman.ui.GamePanel;
-import lospedros.edu.pacman.ui.KeyHandler;
+import lospedros.edu.pacman.utils.Directions;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.util.LinkedList;
 
 public class Pacman extends Entity {
 
     GamePanel gp;
-    KeyHandler keyH;
+    Controller controller;
     
-    public String nextDirection;
+    // Command Cache (Queue)
+    private LinkedList<Integer> inputQueue = new LinkedList<>();
+    private final int MAX_CACHE = 2; // Limit buffer to 2 commands
+    
+    private int nextDirection = Directions.NONE;
 
-    public Pacman(GamePanel gp, KeyHandler keyH) {
+    public Pacman(GamePanel gp, Controller controller) {
         this.gp = gp;
-        this.keyH = keyH;
+        this.controller = controller;
         
-        // Hitbox setup (20x20 centered in 32x32 tile)
-        solidArea = new Rectangle(6, 6, 20, 20); 
+        // Hitbox setup
+        solidArea = new Rectangle(1, 1, 30, 30); 
         
         setDefaultValues();
     }
@@ -29,84 +34,93 @@ public class Pacman extends Entity {
         x = gp.tileSize * 1; 
         y = gp.tileSize * 1;
         speed = 2;
-        direction = "right";
-        nextDirection = "right";
+        direction = Directions.RIGHT;
+        nextDirection = Directions.RIGHT;
+        inputQueue.clear();
     }
 
+    @Override
     public void update() {
-        // Read input
-        if (keyH.upPressed) nextDirection = "up";
-        if (keyH.downPressed) nextDirection = "down";
-        if (keyH.leftPressed) nextDirection = "left";
-        if (keyH.rightPressed) nextDirection = "right";
+        // 1. Read Input and Add to Queue
+        int newDir = Directions.NONE;
+        if (controller.isUp()) newDir = Directions.UP;
+        else if (controller.isDown()) newDir = Directions.DOWN;
+        else if (controller.isLeft()) newDir = Directions.LEFT;
+        else if (controller.isRight()) newDir = Directions.RIGHT;
 
-        // Check if we can turn
-        boolean canTurn = false;
-        
-        // Allow turning if we are close to the center of the tile
-        int xRem = x % gp.tileSize;
-        int yRem = y % gp.tileSize;
-        
-        // Tolerance logic: if remainder is small (less than speed), consider it aligned
-        if (Math.abs(xRem) < speed && Math.abs(yRem) < speed) {
-            canTurn = true;
+        // Only add if it's a valid direction and different from the last queued one (to avoid spam)
+        if (newDir != Directions.NONE) {
+            if (inputQueue.isEmpty() || inputQueue.getLast() != newDir) {
+                if (inputQueue.size() >= MAX_CACHE) {
+                    inputQueue.removeFirst(); // Remove oldest if full
+                }
+                inputQueue.add(newDir);
+            }
         }
 
-        if (canTurn) {
-            String prevDir = direction;
-            direction = nextDirection;
-            
-            // Check collision in the NEW direction
-            collisionOn = false;
-            gp.cChecker.checkTile(this);
-            
-            if (collisionOn) {
-                // If we can't move in nextDirection, revert to previous
-                direction = prevDir;
-            } else {
-                // If turn is successful, snap to exact grid to prevent drift
-                // This ensures we are perfectly aligned for the new axis
-                if (direction.equals("up") || direction.equals("down")) {
-                    x = (x + gp.tileSize/2) / gp.tileSize * gp.tileSize;
-                } else {
-                    y = (y + gp.tileSize/2) / gp.tileSize * gp.tileSize;
+        // 2. Process Queue
+        if (!inputQueue.isEmpty()) {
+            nextDirection = inputQueue.getFirst();
+        }
+
+        // 3. Movement Logic
+        boolean atCenter = (x % gp.tileSize == 0) && (y % gp.tileSize == 0);
+
+        if (atCenter) {
+            // Try to turn to nextDirection
+            if (nextDirection != Directions.NONE && !gp.cChecker.isCollision(this, nextDirection)) {
+                direction = nextDirection;
+                // Consume the command only if we successfully turned
+                if (!inputQueue.isEmpty() && inputQueue.getFirst() == nextDirection) {
+                    inputQueue.removeFirst();
                 }
             }
-        } else if (isOpposite(direction, nextDirection)) {
-            // Allow immediate U-turn anywhere
-            direction = nextDirection;
-        }
-
-        // Move in current direction
-        collisionOn = false;
-        gp.cChecker.checkTile(this);
-
-        if (!collisionOn) {
-            switch (direction) {
-                case "up": y -= speed; break;
-                case "down": y += speed; break;
-                case "left": x -= speed; break;
-                case "right": x += speed; break;
+            
+            // Check if we can continue in current direction
+            if (gp.cChecker.isCollision(this, direction)) {
+                // Stop moving
+            } else {
+                move();
             }
         } else {
-            // COLLISION DETECTED
-            // Snap to the nearest grid position to ensure we can turn next time
-            int snapX = (x + gp.tileSize / 2) / gp.tileSize * gp.tileSize;
-            int snapY = (y + gp.tileSize / 2) / gp.tileSize * gp.tileSize;
-            x = snapX;
-            y = snapY;
+            // Not at center
+            if (isOpposite(direction, nextDirection)) {
+                direction = nextDirection;
+                if (!inputQueue.isEmpty() && inputQueue.getFirst() == nextDirection) {
+                    inputQueue.removeFirst();
+                }
+            }
+            
+            if (!gp.cChecker.isCollision(this, direction)) {
+                move();
+            } else {
+                // Snap to grid if stuck mid-tile
+                int snapX = (x + gp.tileSize/2) / gp.tileSize * gp.tileSize;
+                int snapY = (y + gp.tileSize/2) / gp.tileSize * gp.tileSize;
+                x = snapX;
+                y = snapY;
+            }
         }
         
         // Handle tunnel
-        if (x < -gp.tileSize) x = gp.screenWidth;
-        if (x > gp.screenWidth) x = -gp.tileSize;
+        if (x <= -gp.tileSize) x = gp.screenWidth;
+        if (x >= gp.screenWidth) x = -gp.tileSize;
     }
     
-    private boolean isOpposite(String dir1, String dir2) {
-        if (dir1.equals("up") && dir2.equals("down")) return true;
-        if (dir1.equals("down") && dir2.equals("up")) return true;
-        if (dir1.equals("left") && dir2.equals("right")) return true;
-        if (dir1.equals("right") && dir2.equals("left")) return true;
+    private void move() {
+        switch (direction) {
+            case Directions.UP: y -= speed; break;
+            case Directions.DOWN: y += speed; break;
+            case Directions.LEFT: x -= speed; break;
+            case Directions.RIGHT: x += speed; break;
+        }
+    }
+    
+    private boolean isOpposite(int dir1, int dir2) {
+        if (dir1 == Directions.UP && dir2 == Directions.DOWN) return true;
+        if (dir1 == Directions.DOWN && dir2 == Directions.UP) return true;
+        if (dir1 == Directions.LEFT && dir2 == Directions.RIGHT) return true;
+        if (dir1 == Directions.RIGHT && dir2 == Directions.LEFT) return true;
         return false;
     }
 
